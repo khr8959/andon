@@ -1,0 +1,74 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py SessionStart"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py UserPromptSubmit"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PreToolUse"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PostToolUse"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py Notification"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py Stop"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py SessionEnd"
+          }
+        ]
+      }
+    ]
+  }
+}
