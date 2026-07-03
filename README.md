@@ -44,6 +44,34 @@ hooks を使って状態を通知する。`examples/claude-settings-hooks.json` 
 
 ntfy.sh のトピックは知っている人なら誰でも購読できるため、トピック名はランダムな文字列を含めること。セルフホストのntfyサーバーも「ntfyサーバー」欄で指定できる。
 
+## Codex CLI との連携
+
+> **状態: アダプタ実装済み・実機発火は未確認。** 下記の trust 承認が必要で、その手順はまだ未検証。
+
+Codex(0.139.0で確認)は `~/.codex/hooks.json` に hooks を登録する。`examples/codex-hooks.json` の内容をマージする(パスは環境に合わせて変更)。
+
+- `PermissionRequest` イベントで承認待ち(🔴)を検知できる想定
+- `config.toml` の `notify` 設定は使わないため、既存の notify 連携(Codex Computer Use 等)と衝突しない
+- **重要**: Codexは任意コードを実行するフックを「信頼(trust)」しない限り起動しない。フック定義のハッシュを記録し、承認済みのものだけを実行する安全機構。登録後、**対話型の `codex` で `/hooks` を実行し、menubar-notice のフックを承認する**こと。承認するまで状態は反映されない
+- Codexには SessionEnd がないため、終了したセッションは「完了分をクリア」または24時間で自動削除
+
+## Antigravity CLI との連携
+
+> **状態: プラグイン実装済み・実機発火は未確認(調査中)。** 下記の既知の問題を参照。
+
+Antigravity CLI(`agy` 1.0.8で確認)はプラグイン形式でフックを登録する。`antigravity-plugin/` ディレクトリごと以下でインストールする。
+
+```sh
+cd antigravity-plugin && agy plugin install .
+```
+
+- イベントは PreInvocation / PreToolUse / PostToolUse / PostInvocation / Stop の5種
+- 承認待ち専用イベントが確認できていないため、アプリ側で「実行中のまま10分以上更新がない」セッションに警告を表示して補完する
+- IDE版 Antigravity のフック仕様は非公開のため未対応(CLIのみ)
+- **既知の問題**: `agy plugin install` は成功し、実行時ログにも `JSON hook ... executing command` と出るが、実際にはコマンドが起動しない(状態ファイルが作られない)。バイナリ内の `enableJsonHooks` フラグが experiment / 設定で無効化されているのが原因と見られる。有効化方法は未特定。フックコマンド実行が有効な環境でのみ動作する
+
+`examples/antigravity-hooks.json` は `~/.gemini/antigravity-cli/hooks.json` に直接置く場合の参考用(プラグイン方式を推奨)。
+
 ## 他のエージェントへの対応(汎用プロトコル)
 
 アプリは `~/Library/Application Support/MenubarNotice/status/` を監視しているだけなので、どのエージェントでも以下の形式のJSONを書けば表示対象になる。
@@ -63,12 +91,15 @@ ntfy.sh のトピックは知っている人なら誰でも購読できるため
 
 - 書き込みは「tmpファイルに書いてから rename」で行うこと(読み取り側が中途半端な内容を見ないため)
 - 24時間更新がないファイルは残骸とみなして自動削除される
-- Codex は `notify` 設定、その他のエージェントもラッパースクリプトで同様に対応できる(今後追加予定)
+- `hook_event_name` を stdin JSON で渡すエージェントなら `hooks/generic_status_hook.py <エージェント名>` がそのまま使える
 
 ## 構成
 
 ```
-Sources/MenubarNotice/     メニューバーアプリ本体(Swift + SwiftUI)
-hooks/menuebar_notice_hook.py   Claude Code hooks 用アダプタ
-examples/claude-settings-hooks.json   hooks 設定例
+Sources/MenubarNotice/          メニューバーアプリ本体(Swift + SwiftUI)
+hooks/menuebar_notice_hook.py   Claude Code hooks 用アダプタ(イベント名を引数で受ける)
+hooks/generic_status_hook.py    Codex / Antigravity CLI 等の汎用アダプタ(stdin の hook_event_name を参照)
+examples/claude-settings-hooks.json   Claude Code 用 hooks 設定例
+examples/codex-hooks.json             Codex 用 hooks 設定例
+examples/antigravity-hooks.json       Antigravity CLI 用 hooks 設定例
 ```

@@ -1,0 +1,5 @@
+{
+  "name": "menubar-notice",
+  "description": "エージェントの状態をMenubarNoticeアプリに通知する",
+  "version": "0.1.0"
+}

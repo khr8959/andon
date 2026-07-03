@@ -148,6 +148,13 @@ struct SessionRow: View {
                         .foregroundStyle(.red)
                         .lineLimit(2)
                 }
+                // 承認待ちイベントを通知できないエージェント向けの補助表示
+                if session.state == .running,
+                   Date().timeIntervalSince(session.updatedDate) > 10 * 60 {
+                    Text("⚠︎ 10分以上更新なし(承認待ちで停止している可能性)")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
             }
             Spacer(minLength: 0)
         }

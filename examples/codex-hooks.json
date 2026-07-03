@@ -1,0 +1,70 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py codex",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py codex",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py codex",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py codex",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py codex",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py codex",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
