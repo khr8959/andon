@@ -5,6 +5,8 @@ import Combine
 @MainActor
 final class StatusStore: ObservableObject {
     @Published private(set) var sessions: [SessionStatus] = []
+    /// 承認待ちの点滅用。waiting 中だけ一定周期で反転し、アイコンの明暗を切り替える
+    @Published private(set) var pulseDim = false
 
     static let statusDir: URL = {
         let appSupport = FileManager.default.urls(
@@ -18,7 +20,10 @@ final class StatusStore: ObservableObject {
 
     private var watcher: DirectoryWatcher?
     private var timer: Timer?
+    private var pulseTimer: Timer?
     private var previousStates: [String: AgentState] = [:]
+    /// セッションごとの承認待ち開始時刻(経過時間表示用)
+    private var waitingSince: [String: Date] = [:]
     private let pusher = NtfyPusher()
 
     init() {
@@ -42,6 +47,18 @@ final class StatusStore: ObservableObject {
 
     var waitingCount: Int {
         sessions.filter { $0.state == .waiting }.count
+    }
+
+    /// 最も長く待っているセッションの経過時間(waiting でないときは nil)
+    var waitingElapsedText: String? {
+        guard overallState == .waiting, let since = waitingSince.values.min() else { return nil }
+        let seconds = max(0, Int(Date().timeIntervalSince(since)))
+        let h = seconds / 3600
+        let m = (seconds % 3600) / 60
+        let s = seconds % 60
+        return h > 0
+            ? String(format: "%d:%02d:%02d", h, m, s)
+            : String(format: "%d:%02d", m, s)
     }
 
     func reload() {
@@ -72,6 +89,21 @@ final class StatusStore: ObservableObject {
         if loaded != sessions {
             sessions = loaded
         }
+        updatePulseTimer()
+    }
+
+    /// waiting 中だけ点滅タイマーを回す。経過時間表示の更新もこのタイマーが兼ねる
+    private func updatePulseTimer() {
+        if overallState == .waiting {
+            guard pulseTimer == nil else { return }
+            pulseTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
+                Task { @MainActor in self?.pulseDim.toggle() }
+            }
+        } else if pulseTimer != nil {
+            pulseTimer?.invalidate()
+            pulseTimer = nil
+            pulseDim = false
+        }
     }
 
     /// 完了済み(待機中)セッションの表示を手動でクリアする
@@ -88,13 +120,21 @@ final class StatusStore: ObservableObject {
     private func notifyTransitions(_ newSessions: [SessionStatus]) {
         let known = Set(newSessions.map(\.sessionID))
         previousStates = previousStates.filter { known.contains($0.key) }
+        waitingSince = waitingSince.filter { known.contains($0.key) }
 
         for session in newSessions {
             let previous = previousStates[session.sessionID]
             defer { previousStates[session.sessionID] = session.state }
 
+            if session.state != .waiting {
+                waitingSince.removeValue(forKey: session.sessionID)
+            }
+
             switch session.state {
             case .waiting where previous != .waiting:
+                // アプリ起動時に発見した既存の waiting は状態ファイルの時刻から数える
+                waitingSince[session.sessionID] = previous == nil
+                    ? min(Date(), session.updatedDate) : Date()
                 pusher.push(
                     title: "承認待ち: \(session.projectName)",
                     body: session.message ?? "エージェントがユーザーの対応を待っています",

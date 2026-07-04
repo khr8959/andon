@@ -12,7 +12,9 @@ struct MenubarNoticeApp: App {
         } label: {
             Image(nsImage: StatusIcon.image(
                 for: store.overallState,
-                waitingCount: store.waitingCount
+                waitingCount: store.waitingCount,
+                dimmed: store.pulseDim,
+                elapsedText: store.waitingElapsedText
             ))
         }
         .menuBarExtraStyle(.window)
