@@ -103,6 +103,18 @@ agy はフック(JSON hooks)にも対応しており、プラグイン(`antigrav
 - ペイロードは camelCase(`conversationId` / `workspacePaths`)でイベント名を含まないため、アダプタにはイベント名を第2引数で渡す(`generic_status_hook.py antigravity Stop` など)
 - グローバルの `~/.gemini/antigravity-cli/hooks.json` 直置きは読まれない(プラグインかワークスペースの `.agents/hooks.json` を使う)
 
+## Gemini CLI との連携
+
+> **状態: アダプタの机上検証のみ。** Gemini CLI(0.46.0)はフック機構を持ち、stdin の JSON(`hook_event_name` / `session_id` / `cwd`)が Claude Code 互換のため `generic_status_hook.py gemini` がそのまま使える。ただし検証環境では Gemini Code Assist 個人向け無料枠の廃止(Antigravity への移行案内)により認証できず、実機での発火確認は未実施。
+
+`examples/gemini-settings-hooks.json` の `hooks` オブジェクトを `~/.gemini/settings.json` にマージする(パスは環境に合わせて変更)。
+
+- `BeforeAgent` / `AfterTool` → 実行中(🟡)
+- `Notification`(`ToolPermission` = ツール承認要求)→ 承認・入力待ち(🔴)
+- `AfterAgent` / `SessionStart` → 待機中(🟢)
+- `SessionEnd` → 表示から削除
+- 注意: Gemini のフックは stdout に応答JSON以外を出力すると壊れる仕様のため、アダプタは `gemini` 指定時に `{}` を出力する。timeout の単位はミリ秒
+
 ## 他のエージェントへの対応(汎用プロトコル)
 
 アプリは `~/Library/Application Support/MenubarNotice/status/` を監視しているだけなので、どのエージェントでも以下の形式のJSONを書けば表示対象になる。
@@ -133,6 +145,7 @@ hooks/generic_status_hook.py    Codex / Antigravity CLI 等の汎用アダプタ
 hooks/agy_status_poller.py      Antigravity CLI 用ポーラー(language server API を監視)
 examples/claude-settings-hooks.json   Claude Code 用 hooks 設定例
 examples/codex-hooks.json             Codex 用 hooks 設定例
+examples/gemini-settings-hooks.json   Gemini CLI 用 hooks 設定例(settings.json にマージ)
 examples/antigravity-hooks.json       Antigravity CLI 用 hooks 設定例(.agents/hooks.json に配置)
 examples/menubar-notice-agy-poller.plist   ポーラーの launchd 登録例
 ```

@@ -1,0 +1,76 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "name": "menubar-notice",
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py gemini",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "name": "menubar-notice",
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py gemini",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "hooks": [
+          {
+            "name": "menubar-notice",
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py gemini",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "name": "menubar-notice",
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py gemini",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "name": "menubar-notice",
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py gemini",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "name": "menubar-notice",
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py gemini",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}
