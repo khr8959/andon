@@ -70,20 +70,31 @@ Codex(0.139.0で確認)は `~/.codex/hooks.json` に hooks を登録する。`ex
 
 ## Antigravity CLI との連携
 
-> **状態: プラグイン実装済み・実機発火は未確認(調査中)。** 下記の既知の問題を参照。
+> **状態: ポーラー方式で実機確認済み(1.0.16)。** 🟡実行中 / 🔴承認ダイアログ表示中 / 🟢待機、いずれも動作する。
 
-Antigravity CLI(`agy` 1.0.8で確認)はプラグイン形式でフックを登録する。`antigravity-plugin/` ディレクトリごと以下でインストールする。
+Antigravity CLI(`agy`)はフックのプロセスを起動しないため(後述の既知の問題)、代わりに **language server の API をポーリングする専用スクリプト** `hooks/agy_status_poller.py` を使う。
 
 ```sh
-cd antigravity-plugin && agy plugin install .
+python3 hooks/agy_status_poller.py            # 常駐(3秒間隔)
+python3 hooks/agy_status_poller.py --once -v  # 1回だけ実行(動作確認用)
 ```
 
-- イベントは PreInvocation / PreToolUse / PostToolUse / PostInvocation / Stop の5種
-- 承認待ち専用イベントが確認できていないため、アプリ側で「実行中のまま10分以上更新がない」セッションに警告を表示して補完する
-- IDE版 Antigravity のフック仕様は非公開のため未対応(CLIのみ)
-- **既知の問題(1.0.16でも再現・原因を確定)**: `agy plugin install` は成功し、実行時ログにも `JSON hook ... executing command` と出るが、実際にはコマンドが起動しない(状態ファイルが作られない)。検証として PreInvocation ハンドラを単純な `echo` コマンドに差し替えて実行しても marker ファイルが作られなかったため、**アダプタスクリプト側の不具合ではなく、agy 自体が JSON hook のプロセスを起動していないことを確認済み**。バイナリ内の `enableJsonHooks` フラグが原因と推定されるが、設定ファイル側から有効化する経路は見つかっていない(`agy config` 系コマンドは存在しない)。フックコマンド実行が有効な環境(将来のバージョンアップ等)でのみ動作する
+仕組みと動作:
 
-`examples/antigravity-hooks.json` は `~/.gemini/antigravity-cli/hooks.json` に直接置く場合の参考用(プラグイン方式を推奨)。
+- 稼働中の agy プロセス(CLI内蔵 language server)と IDE併用時のハブ language server を `ps` / `lsof` で自動発見し、Connect RPC で会話一覧と実行状態を取得する。ヘッドレス実行(`agy -p`)の短命プロセスも数秒で捕捉する
+- `CASCADE_RUN_STATUS_RUNNING` 等 → 🟡、コマンドの承認ダイアログ表示中(`CORTEX_STEP_STATUS_WAITING`)→ 🔴、`IDLE` → 🟢。終了した会話の状態ファイルは自動削除する
+- **制限**: agy がツールを発動せずチャット文面で確認を求めて止まった場合は、API上は通常のターン終了と区別が付かないため 🟢 になる(Claude Code がテキストで質問して止まる場合と同じ扱い)。また、ヘッドレス実行はコマンドを自動承認するため 🔴 にはならない
+
+ログイン時に自動起動するには launchd に登録する(`examples/menubar-notice-agy-poller.plist` のパスを環境に合わせて編集してから):
+
+```sh
+cp examples/menubar-notice-agy-poller.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/menubar-notice-agy-poller.plist
+```
+
+### フック方式が使えない理由(既知の問題)
+
+プラグイン(`antigravity-plugin/`、`cd antigravity-plugin && agy plugin install .`)と `examples/antigravity-hooks.json` も同梱しているが、**1.0.8〜1.0.16 時点では動作しない**。`agy plugin install` は成功し、実行時ログにも `JSON hook ... executing command` と出るが、実際にはコマンドが起動しない。PreInvocation ハンドラを単純な `echo` に差し替えても marker ファイルが作られないため、アダプタスクリプト側ではなく **agy 自体が JSON hook のプロセスを起動していない**ことを確認済み。バイナリ内の `enableJsonHooks` フラグが原因と推定されるが、設定側から有効化する経路は未発見。対話型セッションでもフックコマンドの許可プロンプトは出ない(実機確認済み)。フック実行が有効になる将来バージョンではプラグイン方式に切り替えられる。
 
 ## 他のエージェントへの対応(汎用プロトコル)
 
@@ -112,7 +123,9 @@ cd antigravity-plugin && agy plugin install .
 Sources/MenubarNotice/          メニューバーアプリ本体(Swift + SwiftUI)
 hooks/menuebar_notice_hook.py   Claude Code hooks 用アダプタ(イベント名を引数で受ける)
 hooks/generic_status_hook.py    Codex / Antigravity CLI 等の汎用アダプタ(stdin の hook_event_name を参照)
+hooks/agy_status_poller.py      Antigravity CLI 用ポーラー(language server API を監視)
 examples/claude-settings-hooks.json   Claude Code 用 hooks 設定例
 examples/codex-hooks.json             Codex 用 hooks 設定例
-examples/antigravity-hooks.json       Antigravity CLI 用 hooks 設定例
+examples/antigravity-hooks.json       Antigravity CLI 用 hooks 設定例(現状 agy 側が未対応)
+examples/menubar-notice-agy-poller.plist   ポーラーの launchd 登録例
 ```
