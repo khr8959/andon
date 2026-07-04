@@ -6,9 +6,13 @@
 
 イベント名と状態の対応:
     UserPromptSubmit / PreToolUse / PostToolUse -> running(実行中)
-    Notification                               -> waiting(承認・入力待ち)
-    Stop / SessionStart                        -> idle(待機中)
-    SessionEnd                                 -> 状態ファイルを削除
+    PermissionRequest / Notification            -> waiting(承認・入力待ち)
+    PermissionDenied                            -> running(拒否後は続行)
+    Stop / SessionStart                         -> idle(待機中)
+    SessionEnd                                  -> 状態ファイルを削除
+
+Claude Code 2.1.x では承認プロンプトは PermissionRequest イベントで通知される
+(Notification は承認時には発火しない)。旧バージョン互換のため Notification も残す。
 
 hooks の標準入力から渡される JSON の session_id / cwd / message を利用する。
 """
@@ -26,6 +30,8 @@ EVENT_STATE = {
     "UserPromptSubmit": "running",
     "PreToolUse": "running",
     "PostToolUse": "running",
+    "PermissionRequest": "waiting",
+    "PermissionDenied": "running",
     "Notification": "waiting",
     "Stop": "idle",
 }
@@ -56,13 +62,19 @@ def main():
     if state is None:
         return
 
+    message = ""
+    if state == "waiting":
+        message = data.get("message", "")
+        if not message and data.get("tool_name"):
+            message = "%s の実行承認を待っています" % data["tool_name"]
+
     os.makedirs(STATUS_DIR, exist_ok=True)
     status = {
         "session_id": session_id,
         "state": state,
         "event": event,
         "cwd": data.get("cwd", ""),
-        "message": data.get("message", "") if state == "waiting" else "",
+        "message": message,
         "updated_at": time.time(),
         "agent": "claude-code",
     }

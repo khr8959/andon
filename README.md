@@ -41,9 +41,12 @@ hooks を使って状態を通知する。`examples/claude-settings-hooks.json` 
 イベントと状態の対応:
 
 - `UserPromptSubmit` / `PreToolUse` / `PostToolUse` → 実行中(🟡)
-- `Notification`(承認要求・入力待ち)→ 承認・入力待ち(🔴)
+- `PermissionRequest`(承認要求)/ `Notification`(入力待ち等)→ 承認・入力待ち(🔴)
+- `PermissionDenied`(承認拒否)→ 実行中(🟡)に戻す
 - `Stop`(応答完了)/ `SessionStart` → 待機中(🟢)
 - `SessionEnd` → 表示から削除
+
+> **注意(2.1.x)**: Claude Code 2.1.200 で確認したところ、承認プロンプトは `Notification` では発火せず、専用の `PermissionRequest` イベントで通知される。`Notification` だけ登録していると承認待ちでも🔴にならないため、必ず `PermissionRequest` も登録すること(旧バージョン互換のため `Notification` も残している)。既知の制限: 承認後は次のイベント(`PostToolUse`)までが実行中に更新されないため、長時間かかるコマンドを承認した直後はしばらく🔴表示のままになる。
 
 ## スマホ通知(任意)
 
@@ -78,7 +81,7 @@ cd antigravity-plugin && agy plugin install .
 - イベントは PreInvocation / PreToolUse / PostToolUse / PostInvocation / Stop の5種
 - 承認待ち専用イベントが確認できていないため、アプリ側で「実行中のまま10分以上更新がない」セッションに警告を表示して補完する
 - IDE版 Antigravity のフック仕様は非公開のため未対応(CLIのみ)
-- **既知の問題**: `agy plugin install` は成功し、実行時ログにも `JSON hook ... executing command` と出るが、実際にはコマンドが起動しない(状態ファイルが作られない)。バイナリ内の `enableJsonHooks` フラグが experiment / 設定で無効化されているのが原因と見られる。有効化方法は未特定。フックコマンド実行が有効な環境でのみ動作する
+- **既知の問題(1.0.16でも再現・原因を確定)**: `agy plugin install` は成功し、実行時ログにも `JSON hook ... executing command` と出るが、実際にはコマンドが起動しない(状態ファイルが作られない)。検証として PreInvocation ハンドラを単純な `echo` コマンドに差し替えて実行しても marker ファイルが作られなかったため、**アダプタスクリプト側の不具合ではなく、agy 自体が JSON hook のプロセスを起動していないことを確認済み**。バイナリ内の `enableJsonHooks` フラグが原因と推定されるが、設定ファイル側から有効化する経路は見つかっていない(`agy config` 系コマンドは存在しない)。フックコマンド実行が有効な環境(将来のバージョンアップ等)でのみ動作する
 
 `examples/antigravity-hooks.json` は `~/.gemini/antigravity-cli/hooks.json` に直接置く場合の参考用(プラグイン方式を推奨)。
 

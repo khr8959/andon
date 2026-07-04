@@ -40,6 +40,26 @@
         ]
       }
     ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PermissionRequest"
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PermissionDenied"
+          }
+        ]
+      }
+    ],
     "Notification": [
       {
         "hooks": [
