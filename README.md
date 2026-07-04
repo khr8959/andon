@@ -17,12 +17,22 @@
 
 ## ビルドと起動
 
+`.app` バンドルを生成してダブルクリックで起動する(メニューバー常駐アプリなので Dock アイコンは出ない)。
+
 ```sh
-swift build -c release
-.build/release/MenubarNotice &
+./make-app.sh            # build/MenubarNotice.app を生成
+open build/MenubarNotice.app   # 起動(以降は Finder からダブルクリックでもよい)
 ```
 
-ログイン時に自動起動したい場合は、`システム設定 > 一般 > ログイン項目` にビルドしたバイナリを追加するか、LaunchAgent を作成する。
+Mac の普通のアプリとして扱いたい場合は `/Applications` に入れる。
+
+```sh
+./make-app.sh install    # /Applications/MenubarNotice.app へコピー
+```
+
+ログイン時に自動起動したい場合は、`システム設定 > 一般 > ログイン項目` の「ログイン時に開く」に `MenubarNotice.app` を追加する。
+
+> 開発中に生バイナリを直接動かしたいだけなら `swift build -c release && .build/release/MenubarNotice &` でもよいが、ターミナルセッションに紐づくため常用は `.app` を推奨。
 
 ## Claude Code との連携
 
@@ -46,11 +56,11 @@ ntfy.sh のトピックは知っている人なら誰でも購読できるため
 
 ## Codex CLI との連携
 
-> **状態: アダプタ実装済み・実機発火は未確認。** 下記の trust 承認が必要で、その手順はまだ未検証。
+> **状態: 実機で承認待ち(🔴)の発火を確認済み(0.139.0)。** 下記の trust 承認が前提。
 
 Codex(0.139.0で確認)は `~/.codex/hooks.json` に hooks を登録する。`examples/codex-hooks.json` の内容をマージする(パスは環境に合わせて変更)。
 
-- `PermissionRequest` イベントで承認待ち(🔴)を検知できる想定
+- `PermissionRequest` イベントで承認待ち(🔴)を検知する。read-only サンドボックス下でファイル書き込みを依頼する等、承認が必要な操作で `UserPromptSubmit`(🟡)→ `PreToolUse`(🟡)→ `PermissionRequest`(🔴)→ `Stop`(🟢)と遷移することを実機で確認済み
 - `config.toml` の `notify` 設定は使わないため、既存の notify 連携(Codex Computer Use 等)と衝突しない
 - **重要**: Codexは任意コードを実行するフックを「信頼(trust)」しない限り起動しない。フック定義のハッシュを記録し、承認済みのものだけを実行する安全機構。登録後、**対話型の `codex` で `/hooks` を実行し、menubar-notice のフックを承認する**こと。承認するまで状態は反映されない
 - Codexには SessionEnd がないため、終了したセッションは「完了分をクリア」または24時間で自動削除
