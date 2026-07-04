@@ -72,7 +72,7 @@ Codex(0.139.0で確認)は `~/.codex/hooks.json` に hooks を登録する。`ex
 
 > **状態: ポーラー方式で実機確認済み(1.0.16)。** 🟡実行中 / 🔴承認ダイアログ表示中 / 🟢待機、いずれも動作する。
 
-Antigravity CLI(`agy`)はフックのプロセスを起動しないため(後述の既知の問題)、代わりに **language server の API をポーリングする専用スクリプト** `hooks/agy_status_poller.py` を使う。
+agy にはフックの仕組みもあるが**承認待ちを通知するイベントが無い**ため(後述)、推奨は **language server の API をポーリングする専用スクリプト** `hooks/agy_status_poller.py`。フックでは取れない 🔴(承認ダイアログ表示中)を検知できる。
 
 ```sh
 python3 hooks/agy_status_poller.py            # 常駐(3秒間隔)
@@ -92,9 +92,16 @@ cp examples/menubar-notice-agy-poller.plist ~/Library/LaunchAgents/
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/menubar-notice-agy-poller.plist
 ```
 
-### フック方式が使えない理由(既知の問題)
+### フック方式(補助・実機確認済み)
 
-プラグイン(`antigravity-plugin/`、`cd antigravity-plugin && agy plugin install .`)と `examples/antigravity-hooks.json` も同梱しているが、**1.0.8〜1.0.16 時点では動作しない**。`agy plugin install` は成功し、実行時ログにも `JSON hook ... executing command` と出るが、実際にはコマンドが起動しない。PreInvocation ハンドラを単純な `echo` に差し替えても marker ファイルが作られないため、アダプタスクリプト側ではなく **agy 自体が JSON hook のプロセスを起動していない**ことを確認済み。バイナリ内の `enableJsonHooks` フラグが原因と推定されるが、設定側から有効化する経路は未発見。対話型セッションでもフックコマンドの許可プロンプトは出ない(実機確認済み)。フック実行が有効になる将来バージョンではプラグイン方式に切り替えられる。
+agy はフック(JSON hooks)にも対応しており、プラグイン(`antigravity-plugin/`、`cd antigravity-plugin && agy plugin install .`)またはワークスペースの `.agents/hooks.json`(`examples/antigravity-hooks.json` を配置)で登録できる。🟡/🟢 の遷移は実機確認済み。ただし**承認待ちを知らせるフックイベントが存在しない**(イベントは PreInvocation / PreToolUse / PostToolUse / PostInvocation / Stop の5種のみ)ため、🔴 が必要ならポーラー方式を使うこと。**両方を同時に有効にすると同じ会話が2セッションとして二重表示される**ので、どちらか一方だけを使う。
+
+設定形式の注意(agy 内蔵ドキュメント `builtin/skills/agy-customizations/docs/hooks.md` に準拠):
+
+- トップレベルキーはフック名。`PreInvocation` / `PostInvocation` / `Stop` は**ハンドラオブジェクトを直接並べるフラット構造**で、`matcher` + `hooks` のラッパーで包むのは `PreToolUse` / `PostToolUse` だけ。フラットイベントをラッパーで包むと「空コマンドのハンドラ」として読まれ、ログに `executing command` と出るのに何も実行されない(初期実装はこれに引っかかり「agy がフックを起動しない」と誤診していた)
+- **`PreToolUse` は状態通知には使わない**。agy は応答JSONの `decision` フィールド(allow / deny / ask)を要求するため、`{}` を返すと全ツール呼び出しが `invalid_args` で拒否される(実機で確認)。同梱の設定は PreToolUse を含めていない
+- ペイロードは camelCase(`conversationId` / `workspacePaths`)でイベント名を含まないため、アダプタにはイベント名を第2引数で渡す(`generic_status_hook.py antigravity Stop` など)
+- グローバルの `~/.gemini/antigravity-cli/hooks.json` 直置きは読まれない(プラグインかワークスペースの `.agents/hooks.json` を使う)
 
 ## 他のエージェントへの対応(汎用プロトコル)
 
@@ -122,10 +129,10 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/menubar-notice-agy-polle
 ```
 Sources/MenubarNotice/          メニューバーアプリ本体(Swift + SwiftUI)
 hooks/menuebar_notice_hook.py   Claude Code hooks 用アダプタ(イベント名を引数で受ける)
-hooks/generic_status_hook.py    Codex / Antigravity CLI 等の汎用アダプタ(stdin の hook_event_name を参照)
+hooks/generic_status_hook.py    Codex / Antigravity CLI 等の汎用アダプタ(イベント名は stdin の hook_event_name か第2引数)
 hooks/agy_status_poller.py      Antigravity CLI 用ポーラー(language server API を監視)
 examples/claude-settings-hooks.json   Claude Code 用 hooks 設定例
 examples/codex-hooks.json             Codex 用 hooks 設定例
-examples/antigravity-hooks.json       Antigravity CLI 用 hooks 設定例(現状 agy 側が未対応)
+examples/antigravity-hooks.json       Antigravity CLI 用 hooks 設定例(.agents/hooks.json に配置)
 examples/menubar-notice-agy-poller.plist   ポーラーの launchd 登録例
 ```

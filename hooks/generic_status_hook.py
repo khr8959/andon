@@ -2,10 +2,11 @@
 """Codex / Antigravity CLI など汎用のフックアダプタ。
 
 使い方:
-    python3 generic_status_hook.py <エージェント名>
+    python3 generic_status_hook.py <エージェント名> [イベント名]
 
-イベント名は標準入力JSONの hook_event_name から取得する
-(Claude Code用の menuebar_notice_hook.py と異なり、引数はエージェント名のみ)。
+イベント名は標準入力JSONの hook_event_name から取得する。
+Antigravity のようにペイロードへイベント名を含めないエージェントでは
+第2引数で指定する(指定時は stdin より優先し、応答JSON `{}` を出力する)。
 
 対応イベントと状態の対応:
     UserPromptSubmit / PreToolUse / PostToolUse / PreInvocation
@@ -45,15 +46,22 @@ def sanitize(value):
 
 def main():
     agent = sanitize(sys.argv[1]) if len(sys.argv) > 1 else "agent"
+    argv_event = sys.argv[2] if len(sys.argv) > 2 else ""
     try:
         data = json.load(sys.stdin)
     except Exception:
         data = {}
 
-    event = str(data.get("hook_event_name") or "")
-    cwd = str(data.get("cwd") or "")
+    if argv_event:
+        # Antigravity はイベント名をペイロードに含めず、stdout に応答JSONを期待する
+        print("{}")
+        sys.stdout.flush()
 
-    session_id = sanitize(str(data.get("session_id") or ""))
+    event = argv_event or str(data.get("hook_event_name") or "")
+    workspace_paths = data.get("workspacePaths") or []
+    cwd = str(data.get("cwd") or "") or (str(workspace_paths[0]) if workspace_paths else "")
+
+    session_id = sanitize(str(data.get("session_id") or data.get("conversationId") or ""))
     if not session_id:
         # session_id が渡されないエージェント向けのフォールバック
         session_id = hashlib.sha1(f"{agent}:{cwd}".encode()).hexdigest()[:12]
