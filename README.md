@@ -140,6 +140,8 @@ agy はフック(JSON hooks)にも対応しており、プラグイン(`antigrav
 
 ```
 Sources/MenubarNotice/          メニューバーアプリ本体(Swift + SwiftUI)
+assets/icon.svg                 アプリアイコンのソース(headless Chrome で PNG 化、手順はファイル内コメント)
+assets/icon-1024.png            レンダリング済みアイコン(make-app.sh が .icns に変換して同梱)
 hooks/menuebar_notice_hook.py   Claude Code hooks 用アダプタ(イベント名を引数で受ける)
 hooks/generic_status_hook.py    Codex / Antigravity CLI 等の汎用アダプタ(イベント名は stdin の hook_event_name か第2引数)
 hooks/agy_status_poller.py      Antigravity CLI 用ポーラー(language server API を監視)

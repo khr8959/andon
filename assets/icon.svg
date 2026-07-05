@@ -1,0 +1,86 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- MenubarNotice アプリアイコンのソース。
+       レンダリング: headless Chrome で assets/icon.svg を 1024x1024 の透過PNGに変換する。
+         chrome --headless=new --disable-gpu --hide-scrollbars \
+           --window-size=1024,1024 --default-background-color=00000000 \
+           --screenshot=assets/icon-1024.png assets/icon.svg -->
+  <defs>
+    <!-- 白フチ -->
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EDEEF3"/>
+    </linearGradient>
+    <!-- メニューバー帯 -->
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5F5F8"/>
+      <stop offset="1" stop-color="#DEE0E7"/>
+    </linearGradient>
+    <!-- デスクトップ背景 -->
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#272C50"/>
+      <stop offset="0.55" stop-color="#20307A"/>
+      <stop offset="1" stop-color="#2B4BB3"/>
+    </linearGradient>
+    <!-- 赤ドットのグロー -->
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF453A" stop-opacity="0.55"/>
+      <stop offset="0.55" stop-color="#FF453A" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#FF453A" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft1" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
+    <filter id="soft2" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="58"/>
+    </filter>
+    <filter id="ridge" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <clipPath id="inner">
+      <rect x="102" y="102" width="820" height="820" rx="174"/>
+    </clipPath>
+  </defs>
+
+  <!-- 白フチ squircle -->
+  <rect x="80" y="80" width="864" height="864" rx="194" fill="url(#rim)"/>
+  <rect x="80" y="80" width="864" height="864" rx="194" fill="none" stroke="#D6D8DF" stroke-width="2"/>
+
+  <g clip-path="url(#inner)">
+    <!-- デスクトップ(壁紙風) -->
+    <rect x="102" y="102" width="820" height="820" fill="url(#desk)"/>
+    <path d="M 60 560 C 300 470, 520 650, 760 540 S 980 460, 1000 500 L 1000 960 L 60 960 Z"
+          fill="#5A6FE0" opacity="0.42" filter="url(#soft1)"/>
+    <path d="M 60 780 C 320 710, 560 850, 820 740 L 1000 690 L 1000 980 L 60 980 Z"
+          fill="#8B6FE8" opacity="0.26" filter="url(#soft2)"/>
+    <!-- 波の稜線(オーロラ風の光) -->
+    <path d="M 60 560 C 300 470, 520 650, 760 540 S 980 460, 1000 500"
+          fill="none" stroke="#9BA9FF" stroke-width="7" opacity="0.55" filter="url(#ridge)"/>
+    <path d="M 60 780 C 320 710, 560 850, 820 740 L 1000 690"
+          fill="none" stroke="#C0A4FF" stroke-width="6" opacity="0.40" filter="url(#ridge)"/>
+
+    <!-- メニューバー帯(squircle高さの約28%) -->
+    <rect x="102" y="102" width="820" height="242" fill="url(#bar)"/>
+    <rect x="102" y="340" width="820" height="4" fill="#A9ADBA" opacity="0.55"/>
+
+    <!-- 赤い光点(承認待ち) -->
+    <circle cx="478" cy="223" r="112" fill="url(#glow)"/>
+    <circle cx="478" cy="223" r="72" fill="#FF3B30"/>
+
+    <!-- グレーのステータスアイコン群 -->
+    <g fill="none" stroke="#83868F" stroke-width="17" stroke-linecap="round">
+      <!-- Wi-Fi -->
+      <g transform="translate(660,214) scale(0.8)">
+        <path d="M -25.5 26.5 A 36 36 0 0 1 25.5 26.5"/>
+        <path d="M -46.7 5.3 A 66 66 0 0 1 46.7 5.3"/>
+        <path d="M -67.9 -15.9 A 96 96 0 0 1 67.9 -15.9"/>
+        <circle cx="0" cy="52" r="14" fill="#83868F" stroke="none"/>
+      </g>
+      <!-- 電池 -->
+      <g transform="translate(818,223) scale(0.8)" stroke-width="12">
+        <rect x="-56" y="-30" width="104" height="60" rx="16"/>
+        <rect x="-44" y="-18" width="52" height="36" rx="8" fill="#83868F" stroke="none"/>
+        <rect x="58" y="-12" width="14" height="24" rx="6" fill="#83868F" stroke="none"/>
+      </g>
+    </g>
+  </g>
+</svg>
