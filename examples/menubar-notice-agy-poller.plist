@@ -10,7 +10,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/usr/bin/python3</string>
-		<string>/Users/YOUR_USER/GitHub/menuebar-notice/hooks/agy_status_poller.py</string>
+		<string>/PATH/TO/menubar-notice/hooks/agy_status_poller.py</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

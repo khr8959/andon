@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py SessionStart"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py SessionStart"
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py UserPromptSubmit"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py UserPromptSubmit"
           }
         ]
       }
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PreToolUse"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py PreToolUse"
           }
         ]
       }
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PostToolUse"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py PostToolUse"
           }
         ]
       }
@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PermissionRequest"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py PermissionRequest"
           }
         ]
       }
@@ -55,7 +55,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py PermissionDenied"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py PermissionDenied"
           }
         ]
       }
@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py Notification"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py Notification"
           }
         ]
       }
@@ -75,7 +75,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py Stop"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py Stop"
           }
         ]
       }
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/menuebar_notice_hook.py SessionEnd"
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/menuebar_notice_hook.py SessionEnd"
           }
         ]
       }

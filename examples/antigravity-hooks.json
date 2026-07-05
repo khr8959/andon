@@ -3,7 +3,7 @@
     "PreInvocation": [
       {
         "type": "command",
-        "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py antigravity PreInvocation",
+        "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/generic_status_hook.py antigravity PreInvocation",
         "timeout": 5
       }
     ],
@@ -13,7 +13,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py antigravity PostToolUse",
+            "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/generic_status_hook.py antigravity PostToolUse",
             "timeout": 5
           }
         ]
@@ -22,14 +22,14 @@
     "PostInvocation": [
       {
         "type": "command",
-        "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py antigravity PostInvocation",
+        "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/generic_status_hook.py antigravity PostInvocation",
         "timeout": 5
       }
     ],
     "Stop": [
       {
         "type": "command",
-        "command": "/usr/bin/python3 /Users/h.koyama/GitHub/menuebar-notice/hooks/generic_status_hook.py antigravity Stop",
+        "command": "/usr/bin/python3 /PATH/TO/menubar-notice/hooks/generic_status_hook.py antigravity Stop",
         "timeout": 5
       }
     ]
