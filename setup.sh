@@ -1,12 +1,11 @@
 #!/bin/sh
-# MenubarNotice を一括セットアップする。
-#   ./setup.sh                … アプリをビルドして /Applications へインストールし、
-#                               各エージェント用の設定ファイルを build/config/ に生成する
-#   ./setup.sh --config-only  … アプリには触らず、設定ファイルの生成だけ行う
+# One-shot setup for Andon (from a cloned repository).
+#   ./setup.sh                ... build, install to /Applications, and
+#                                 generate agent configs into build/config/
+#   ./setup.sh --config-only  ... only generate the configs
 #
-# 設定の生成は generate-configs.sh に委譲する(examples/ 内のパスプレースホルダを
-# このリポジトリの実際の場所に置き換えて build/config/ に出力する)。
-# ユーザーの設定ファイル(~/.claude/settings.json 等)は書き換えない。
+# Config generation is delegated to generate-configs.sh. Your own config
+# files (~/.claude/settings.json etc.) are never modified.
 set -e
 
 cd "$(dirname "$0")"
@@ -18,6 +17,6 @@ fi
 ./generate-configs.sh
 
 cat <<EOF
-  アプリの起動: open /Applications/MenubarNotice.app
-  ログイン時に自動起動するには「システム設定 > 一般 > ログイン項目」に追加する。
+  Launch the app: open /Applications/Andon.app
+  To start at login, add it in System Settings > General > Login Items.
 EOF

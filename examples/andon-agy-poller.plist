@@ -6,11 +6,11 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>local.menubar-notice.agy-poller</string>
+	<string>local.andon.agy-poller</string>
 	<key>ProgramArguments</key>
 	<array>
 		<string>/usr/bin/python3</string>
-		<string>/PATH/TO/menubar-notice/hooks/agy_status_poller.py</string>
+		<string>/PATH/TO/andon/hooks/agy_status_poller.py</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

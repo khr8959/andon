@@ -38,11 +38,11 @@ struct MenuContent: View {
 
     private var header: some View {
         HStack {
-            Text("エージェント状態")
+            Text(L10n.t("エージェント状態", "Agent Status"))
                 .font(.headline)
             Spacer()
             if store.waitingCount > 0 {
-                Text("承認待ち \(store.waitingCount)件")
+                Text(L10n.t("承認待ち \(store.waitingCount)件", "\(store.waitingCount) waiting"))
                     .font(.caption.bold())
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
@@ -55,7 +55,7 @@ struct MenuContent: View {
     @ViewBuilder
     private var sessionList: some View {
         if store.sessions.isEmpty {
-            Text("アクティブなセッションはありません")
+            Text(L10n.t("アクティブなセッションはありません", "No active sessions"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 14)
@@ -72,31 +72,31 @@ struct MenuContent: View {
     private var settingsSection: some View {
         DisclosureGroup(isExpanded: $showSettings) {
             VStack(alignment: .leading, spacing: 8) {
-                Toggle("承認待ちをスマホへ通知", isOn: $pushOnWaiting)
-                Toggle("完了もスマホへ通知", isOn: $pushOnIdle)
-                TextField("ntfyトピック名(例: my-agents-x7k2)", text: $ntfyTopic)
+                Toggle(L10n.t("承認待ちをスマホへ通知", "Push to phone on waiting"), isOn: $pushOnWaiting)
+                Toggle(L10n.t("完了もスマホへ通知", "Also push on completion"), isOn: $pushOnIdle)
+                TextField(L10n.t("ntfyトピック名(例: my-agents-x7k2)", "ntfy topic (e.g. my-agents-x7k2)"), text: $ntfyTopic)
                     .textFieldStyle(.roundedBorder)
-                TextField("ntfyサーバー(空欄なら ntfy.sh)", text: $ntfyServer)
+                TextField(L10n.t("ntfyサーバー(空欄なら ntfy.sh)", "ntfy server (blank = ntfy.sh)"), text: $ntfyServer)
                     .textFieldStyle(.roundedBorder)
-                Text("スマホのntfyアプリで同じトピックを購読すると、離席中でも通知を受け取れます。")
+                Text(L10n.t("スマホのntfyアプリで同じトピックを購読すると、離席中でも通知を受け取れます。", "Subscribe to the same topic in the ntfy app on your phone to get notified while away."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 6)
         } label: {
-            Label("スマホ通知(ntfy)", systemImage: "iphone.radiowaves.left.and.right")
+            Label(L10n.t("スマホ通知(ntfy)", "Phone notifications (ntfy)"), systemImage: "iphone.radiowaves.left.and.right")
                 .font(.callout)
         }
     }
 
     private var footer: some View {
         HStack {
-            Button("完了分をクリア") {
+            Button(L10n.t("完了分をクリア", "Clear completed")) {
                 store.clearIdleSessions()
             }
             .disabled(!store.sessions.contains { $0.state == .idle })
             Spacer()
-            Button("終了") {
+            Button(L10n.t("終了", "Quit")) {
                 NSApplication.shared.terminate(nil)
             }
         }
@@ -135,7 +135,7 @@ struct SessionRow: View {
                         .background(Capsule().fill(.quaternary))
                 }
                 HStack(spacing: 6) {
-                    Text(session.state.labelJa)
+                    Text(session.state.label)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(session.updatedDate, style: .relative)
@@ -151,7 +151,7 @@ struct SessionRow: View {
                 // 承認待ちイベントを通知できないエージェント向けの補助表示
                 if session.state == .running,
                    Date().timeIntervalSince(session.updatedDate) > 10 * 60 {
-                    Text("⚠︎ 10分以上更新なし(承認待ちで停止している可能性)")
+                    Text(L10n.t("⚠︎ 10分以上更新なし(承認待ちで停止している可能性)", "⚠︎ No updates for 10+ min (may be stuck waiting for approval)"))
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }

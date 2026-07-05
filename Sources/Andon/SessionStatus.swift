@@ -15,11 +15,11 @@ enum AgentState: String, Codable {
         }
     }
 
-    var labelJa: String {
+    var label: String {
         switch self {
-        case .waiting: return "承認・入力待ち"
-        case .running: return "実行中"
-        case .idle: return "待機中(完了)"
+        case .waiting: return L10n.t("承認・入力待ち", "Waiting for approval")
+        case .running: return L10n.t("実行中", "Running")
+        case .idle: return L10n.t("待機中(完了)", "Idle (done)")
         }
     }
 }
@@ -44,7 +44,7 @@ struct SessionStatus: Codable, Identifiable, Equatable {
     var id: String { sessionID }
 
     var projectName: String {
-        guard let cwd, !cwd.isEmpty else { return "(不明なプロジェクト)" }
+        guard let cwd, !cwd.isEmpty else { return L10n.t("(不明なプロジェクト)", "(unknown project)") }
         return (cwd as NSString).lastPathComponent
     }
 

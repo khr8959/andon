@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct MenubarNoticeApp: App {
+struct AndonApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store = StatusStore()
 

@@ -12,7 +12,7 @@ final class StatusStore: ObservableObject {
         let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         )[0]
-        return appSupport.appendingPathComponent("MenubarNotice/status", isDirectory: true)
+        return appSupport.appendingPathComponent("Andon/status", isDirectory: true)
     }()
 
     /// この時間更新がないファイルは自動削除する(クラッシュしたセッションの残骸対策)
@@ -136,14 +136,18 @@ final class StatusStore: ObservableObject {
                 waitingSince[session.sessionID] = previous == nil
                     ? min(Date(), session.updatedDate) : Date()
                 pusher.push(
-                    title: "承認待ち: \(session.projectName)",
-                    body: session.message ?? "エージェントがユーザーの対応を待っています",
+                    title: L10n.t("承認待ち: \(session.projectName)",
+                                  "Waiting for approval: \(session.projectName)"),
+                    body: session.message ?? L10n.t("エージェントがユーザーの対応を待っています",
+                                                    "An agent is waiting for your input"),
                     kind: .waiting
                 )
             case .idle where previous == .running || previous == .waiting:
                 pusher.push(
-                    title: "完了: \(session.projectName)",
-                    body: "タスクが完了し、待機状態になりました",
+                    title: L10n.t("完了: \(session.projectName)",
+                                  "Done: \(session.projectName)"),
+                    body: L10n.t("タスクが完了し、待機状態になりました",
+                                 "Task finished; the agent is now idle"),
                     kind: .idle
                 )
             default:

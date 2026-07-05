@@ -1,40 +1,40 @@
 #!/bin/sh
-# MenubarNotice.app を生成する。
-#   ./make-app.sh          … ビルドして .app を作るだけ
-#   ./make-app.sh install  … 作った .app を /Applications へコピーする
+# Build Andon.app.
+#   ./make-app.sh          ... build the .app bundle only
+#   ./make-app.sh install  ... also copy it to /Applications
 #
-# リリースビルドの実行ファイルを macOS の .app バンドル構造に詰め直し、
-# Info.plist(LSUIElement=true → Dockアイコンなしのメニューバー常駐)を同梱する。
+# Repackages the release binary into a macOS .app bundle with Info.plist
+# (LSUIElement=true -> menu bar resident app without a Dock icon).
 set -e
 
 cd "$(dirname "$0")"
 
-APP_NAME="MenubarNotice"
+APP_NAME="Andon"
 APP_DIR="build/${APP_NAME}.app"
 CONTENTS="${APP_DIR}/Contents"
 
-echo "==> リリースビルド"
+echo "==> Release build"
 swift build -c release
 
-echo "==> .app バンドルを生成: ${APP_DIR}"
+echo "==> Assembling app bundle: ${APP_DIR}"
 rm -rf "${APP_DIR}"
 mkdir -p "${CONTENTS}/MacOS"
 mkdir -p "${CONTENTS}/Resources"
 cp ".build/release/${APP_NAME}" "${CONTENTS}/MacOS/${APP_NAME}"
 cp "Info.plist" "${CONTENTS}/Info.plist"
 
-# エージェント連携用のスクリプトと設定テンプレートを同梱する。
-# これにより dmg 配布でもリポジトリなしでセットアップが完結する
-# (アプリ内の generate-configs.sh が Resources 内の hooks を参照する設定を生成する)。
+# Bundle the agent-integration scripts and config templates so a dmg
+# distribution is self-contained (the bundled generate-configs.sh emits
+# configs that reference the hooks inside Resources).
 mkdir -p "${CONTENTS}/Resources/hooks" "${CONTENTS}/Resources/examples" "${CONTENTS}/Resources/antigravity-plugin"
 cp hooks/*.py "${CONTENTS}/Resources/hooks/"
 cp examples/* "${CONTENTS}/Resources/examples/"
 cp antigravity-plugin/* "${CONTENTS}/Resources/antigravity-plugin/"
 cp generate-configs.sh "${CONTENTS}/Resources/"
 
-# アプリアイコン(assets/icon-1024.png があれば .icns に変換して同梱)
+# App icon (convert assets/icon-1024.png to .icns if present)
 if [ -f "assets/icon-1024.png" ]; then
-    echo "==> アイコンを生成"
+    echo "==> Generating icon"
     ICONSET="build/AppIcon.iconset"
     rm -rf "${ICONSET}"
     mkdir -p "${ICONSET}"
@@ -48,14 +48,14 @@ if [ -f "assets/icon-1024.png" ]; then
     iconutil -c icns "${ICONSET}" -o "${CONTENTS}/Resources/AppIcon.icns"
 fi
 
-# 未署名アプリでも自分のMacで起動できるよう ad-hoc 署名しておく
+# Ad-hoc sign so the unsigned app still launches on the build machine
 codesign --force --sign - "${APP_DIR}" >/dev/null 2>&1 || true
 
-echo "==> 完成: ${APP_DIR}"
+echo "==> Done: ${APP_DIR}"
 
 if [ "$1" = "install" ]; then
-    echo "==> /Applications へインストール"
+    echo "==> Installing to /Applications"
     rm -rf "/Applications/${APP_NAME}.app"
     cp -R "${APP_DIR}" "/Applications/${APP_NAME}.app"
-    echo "==> インストール完了: /Applications/${APP_NAME}.app"
+    echo "==> Installed: /Applications/${APP_NAME}.app"
 fi

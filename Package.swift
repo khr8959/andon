@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "MenubarNotice",
+    name: "Andon",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "MenubarNotice",
-            path: "Sources/MenubarNotice"
+            name: "Andon",
+            path: "Sources/Andon"
         )
     ]
 )

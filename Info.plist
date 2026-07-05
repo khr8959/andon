@@ -3,19 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>MenubarNotice</string>
+    <string>Andon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.hkoyama.MenubarNotice</string>
+    <string>com.hkoyama.Andon</string>
     <key>CFBundleName</key>
-    <string>MenubarNotice</string>
+    <string>Andon</string>
     <key>CFBundleDisplayName</key>
-    <string>MenubarNotice</string>
+    <string>Andon</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>

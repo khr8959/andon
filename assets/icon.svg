@@ -1,5 +1,5 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <!-- MenubarNotice アプリアイコンのソース。
+  <!-- Andon アプリアイコンのソース。
        レンダリング: headless Chrome で assets/icon.svg を 1024x1024 の透過PNGに変換する。
          chrome --headless=new --disable-gpu --hide-scrollbars \
            --window-size=1024,1024 --default-background-color=00000000 \

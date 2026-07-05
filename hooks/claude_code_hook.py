@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Claude Code hooks から呼ばれ、MenubarNotice の状態ファイルを更新するアダプタ。
+"""Claude Code hooks から呼ばれ、Andon の状態ファイルを更新するアダプタ。
 
 使い方(~/.claude/settings.json の hooks で登録):
-    python3 /path/to/menubar_notice_hook.py <イベント名>
+    python3 /path/to/claude_code_hook.py <イベント名>
 
 イベント名と状態の対応:
     UserPromptSubmit / PreToolUse / PostToolUse -> running(実行中)
@@ -23,7 +23,7 @@ import sys
 import tempfile
 import time
 
-STATUS_DIR = os.path.expanduser("~/Library/Application Support/MenubarNotice/status")
+STATUS_DIR = os.path.expanduser("~/Library/Application Support/Andon/status")
 
 EVENT_STATE = {
     "SessionStart": "idle",

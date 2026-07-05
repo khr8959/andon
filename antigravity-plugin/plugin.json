@@ -1,5 +1,5 @@
 {
-  "name": "menubar-notice",
-  "description": "エージェントの状態をMenubarNoticeアプリに通知する",
+  "name": "andon",
+  "description": "エージェントの状態をAndonアプリに通知する",
   "version": "0.1.0"
 }

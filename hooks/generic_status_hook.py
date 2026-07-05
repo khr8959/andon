@@ -27,7 +27,7 @@ import sys
 import tempfile
 import time
 
-STATUS_DIR = os.path.expanduser("~/Library/Application Support/MenubarNotice/status")
+STATUS_DIR = os.path.expanduser("~/Library/Application Support/Andon/status")
 
 RUNNING_EVENTS = {
     "UserPromptSubmit",

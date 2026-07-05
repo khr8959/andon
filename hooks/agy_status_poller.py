@@ -2,7 +2,7 @@
 """Antigravity CLI (agy) の状態を language server API から取得するポーラー。
 
 agy 1.0.x は JSON hook のプロセスを起動しないため、フック方式の代わりに
-language server の Connect RPC をポーリングして MenubarNotice の状態
+language server の Connect RPC をポーリングして Andon の状態
 ファイルへ変換する。
 
 仕組み:
@@ -33,7 +33,7 @@ import time
 import urllib.error
 import urllib.request
 
-STATUS_DIR = os.path.expanduser("~/Library/Application Support/MenubarNotice/status")
+STATUS_DIR = os.path.expanduser("~/Library/Application Support/Andon/status")
 SERVICE = "exa.language_server_pb.LanguageServerService"
 POLL_INTERVAL = 3.0
 # この時間より古い会話は表示対象から外す(状態ファイルも削除する)
