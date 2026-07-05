@@ -23,6 +23,15 @@ mkdir -p "${CONTENTS}/Resources"
 cp ".build/release/${APP_NAME}" "${CONTENTS}/MacOS/${APP_NAME}"
 cp "Info.plist" "${CONTENTS}/Info.plist"
 
+# エージェント連携用のスクリプトと設定テンプレートを同梱する。
+# これにより dmg 配布でもリポジトリなしでセットアップが完結する
+# (アプリ内の generate-configs.sh が Resources 内の hooks を参照する設定を生成する)。
+mkdir -p "${CONTENTS}/Resources/hooks" "${CONTENTS}/Resources/examples" "${CONTENTS}/Resources/antigravity-plugin"
+cp hooks/*.py "${CONTENTS}/Resources/hooks/"
+cp examples/* "${CONTENTS}/Resources/examples/"
+cp antigravity-plugin/* "${CONTENTS}/Resources/antigravity-plugin/"
+cp generate-configs.sh "${CONTENTS}/Resources/"
+
 # アプリアイコン(assets/icon-1024.png があれば .icns に変換して同梱)
 if [ -f "assets/icon-1024.png" ]; then
     echo "==> アイコンを生成"

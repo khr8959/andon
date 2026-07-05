@@ -15,7 +15,21 @@
 
 複数セッションがある場合は、最も緊急度の高い状態の色を表示する。アイコンをクリックするとセッションごとの詳細(プロジェクト名、状態、経過時間)が見える。
 
-## セットアップ
+## インストール(dmg・ビルド不要)
+
+[Releases](https://github.com/khr8959/menubar-notice/releases) から `MenubarNotice-<version>.dmg` をダウンロードし、`MenubarNotice.app` を `Applications` へドラッグする。
+
+> **初回起動の注意**: アプリは未署名(ad-hoc 署名のみ、Apple 公証なし)のため Gatekeeper に止められる。アプリを右クリック→「開く」→「開く」で起動する。macOS 15 以降で開けない場合は「システム設定 > プライバシーとセキュリティ」最下部の「このまま開く」を押す。
+
+エージェント連携用のスクリプトと設定テンプレートはアプリに同梱されている。ターミナルで:
+
+```sh
+/Applications/MenubarNotice.app/Contents/Resources/generate-configs.sh
+```
+
+を実行すると、アプリ内蔵のフックを参照する設定一式が `~/Library/Application Support/MenubarNotice/config/` に生成されるので、画面の案内に従って使いたいエージェントにマージする(各エージェントの詳細は下記の連携の節を参照。節中の `build/config/` は dmg 利用時はこの生成先に読み替える)。
+
+## ソースからセットアップ
 
 必要なのは macOS 14+ と Xcode Command Line Tools(`swift` と `python3`)だけ。
 
@@ -145,7 +159,10 @@ agy はフック(JSON hooks)にも対応しており、プラグイン(`cd build
 
 ```
 setup.sh                        一括セットアップ(ビルド + インストール + 設定生成)
-make-app.sh                     .app バンドルの生成(setup.sh から呼ばれる)
+generate-configs.sh             設定生成(examples/ のプレースホルダを実パスに展開。
+                                アプリの Resources にも同梱され、dmg 配布でも動く)
+make-app.sh                     .app バンドルの生成(hooks・examples・generate-configs.sh を同梱)
+make-dmg.sh                     配布用 dmg の生成
 Sources/MenubarNotice/          メニューバーアプリ本体(Swift + SwiftUI)
 assets/icon.svg                 アプリアイコンのソース(headless Chrome で PNG 化、手順はファイル内コメント)
 assets/icon-1024.png            レンダリング済みアイコン(make-app.sh が .icns に変換して同梱)
