@@ -2,7 +2,7 @@
 """Claude Code hooks から呼ばれ、MenubarNotice の状態ファイルを更新するアダプタ。
 
 使い方(~/.claude/settings.json の hooks で登録):
-    python3 /path/to/menuebar_notice_hook.py <イベント名>
+    python3 /path/to/menubar_notice_hook.py <イベント名>
 
 イベント名と状態の対応:
     UserPromptSubmit / PreToolUse / PostToolUse -> running(実行中)
