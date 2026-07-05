@@ -4,6 +4,8 @@
 
 コーディングAIエージェント(Claude Code / Codex / Antigravity など)の状態をmacOSメニューバーに信号機の色で表示する常駐アプリ。
 
+![Andonデモ — メニューバーの信号がエージェントに追従する: 緑(待機) → 黄(実行中) → 赤点滅(承認待ち)](demo/andon-demo-lp.gif)
+
 名前の由来はトヨタ生産方式の「[アンドン(行灯)](https://ja.wikipedia.org/wiki/%E3%82%A2%E3%83%B3%E3%83%89%E3%83%B3)」。生産ラインが止まって人の対応が必要なときに点灯するあのランプ。裏でエージェントを走らせているとき、承認待ちで止まっていることに気づかない問題を解決する。音やポップアップは一切出さないため、Web会議中でも邪魔にならない。離席時はスマホへのプッシュ通知(ntfy、任意設定)で補完する。
 
 ## 状態表示
@@ -174,6 +176,7 @@ hooks/agy_status_poller.py      Antigravity CLI 用ポーラー(language server 
 antigravity-plugin/             Antigravity CLI 用プラグイン(フック方式)
 examples/                       各エージェント用の設定テンプレート(パスはプレースホルダ。
                                 setup.sh が実パスに展開して build/config/ へ出力する)
+demo/                           README・LP用のデモ動画とGIF
 ```
 
 パスプレースホルダを手で置き換えれば `examples/` を直接使うこともできる(`/PATH/TO/andon` をリポジトリの絶対パスに置換)。

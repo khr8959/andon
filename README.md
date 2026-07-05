@@ -4,6 +4,8 @@
 
 Traffic-light status for your AI coding agents (Claude Code, Codex, Antigravity, ...) in the macOS menu bar.
 
+![Andon demo — the menu bar light follows your agent: green (idle) → yellow (working) → blinking red (needs your approval)](demo/andon-demo-lp.gif)
+
 Named after the [andon](https://en.wikipedia.org/wiki/Andon_(manufacturing)) light in the Toyota Production System — the lamp that turns on when a production line stops and a human is needed. Same idea here: when you run coding agents in the background, the painful failure mode is not noticing that one of them has been sitting there waiting for your approval. Andon makes that state impossible to miss, without making any noise: no sounds, no popups, meeting-safe. Optional push notifications to your phone (via ntfy) cover the time you are away from the Mac.
 
 ## Status display
@@ -176,6 +178,7 @@ hooks/agy_status_poller.py      Antigravity CLI poller (watches the language ser
 antigravity-plugin/             Antigravity CLI plugin (hook approach)
 examples/                       config templates for each agent (paths are placeholders;
                                 setup.sh expands them into build/config/)
+demo/                           demo video and GIF for the README / landing page
 ```
 
 You can also use `examples/` directly by replacing the placeholder by hand (substitute `/PATH/TO/andon` with the absolute path of the repository).
