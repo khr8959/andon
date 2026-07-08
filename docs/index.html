@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Andon — Traffic-light status for your AI coding agents</title>
+<meta name="description" content="Andonは、Claude Code・Codex・Antigravity・Gemini CLIなどAIコーディングエージェントの状態を、macOSメニューバーに信号機の色で表示する常駐アプリです。音もポップアップも出さず、承認待ちを見逃しません。">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Andon — Traffic-light status for your AI coding agents">
+<meta property="og:description" content="🟢待機 🟡作業中 🔴承認待ち。AIコーディングエージェントの状態をmacOSメニューバーに信号機色で表示。音なし・ポップアップなし・会議安全。">
+<meta property="og:image" content="https://khr8959.github.io/andon/og.png">
+<meta property="og:url" content="https://khr8959.github.io/andon/">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Andon — Traffic-light status for your AI coding agents">
+<meta name="twitter:description" content="🟢待機 🟡作業中 🔴承認待ち。AIコーディングエージェントの状態をmacOSメニューバーに信号機色で表示。音なし・ポップアップなし・会議安全。">
+<meta name="twitter:image" content="https://khr8959.github.io/andon/og.png">
+
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+
+<style>
+  :root {
+    --bg-top: #3A4A6B;
+    --bg-bottom: #20263C;
+    --panel: rgba(255,255,255,0.045);
+    --panel-border: rgba(255,255,255,0.09);
+    --panel-border-hover: rgba(255,255,255,0.16);
+    --text-primary: #F2F3F7;
+    --text-secondary: rgba(242,243,247,0.68);
+    --text-tertiary: rgba(242,243,247,0.44);
+    --green: #34C759;
+    --yellow: #FFCC00;
+    --red: #FF453A;
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Hiragino Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: "SF Mono", ui-monospace, "Menlo", "Consolas", monospace;
+    --max-w: 1120px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background:
+      radial-gradient(1100px 620px at 14% -8%, rgba(255,255,255,0.10), transparent 60%),
+      radial-gradient(900px 700px at 100% 8%, rgba(90,140,255,0.14), transparent 55%),
+      linear-gradient(160deg, var(--bg-top) 0%, var(--bg-bottom) 62%, #171B2B 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* faint grain / noise overlay for depth */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  a { color: inherit; }
+
+  .wrap {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 0 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---------- Nav ---------- */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: saturate(160%) blur(16px);
+    -webkit-backdrop-filter: saturate(160%) blur(16px);
+    background: rgba(24,28,44,0.55);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-inner {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 10px 1px rgba(255,69,58,0.7);
+    animation: blink 1.6s steps(1,end) infinite;
+  }
+  .lang-toggle {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .lang-toggle button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 6px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .lang-toggle button.active {
+    background: rgba(255,255,255,0.14);
+    color: var(--text-primary);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 108px 0 64px;
+    text-align: center;
+    position: relative;
+  }
+  .hero-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 30px;
+    opacity: 0;
+    animation: rise 0.7s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .hero-mark .emoji { font-size: 38px; line-height: 1; filter: drop-shadow(0 0 18px rgba(255,204,0,0.35)); }
+  .hero-mark .word {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  h1.headline {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(34px, 5.4vw, 62px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    margin: 0 0 22px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #D9DCE8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    opacity: 0;
+    animation: rise 0.8s cubic-bezier(.2,.8,.2,1) 0.08s forwards;
+  }
+  .headline .accent-red { color: var(--red); -webkit-text-fill-color: var(--red); }
+  p.subcopy {
+    font-size: clamp(16px, 2vw, 19px);
+    line-height: 1.65;
+    color: var(--text-secondary);
+    max-width: 620px;
+    margin: 0 auto 40px;
+    opacity: 0;
+    animation: rise 0.8s cubic-bezier(.2,.8,.2,1) 0.16s forwards;
+  }
+  .cta-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: rise 0.8s cubic-bezier(.2,.8,.2,1) 0.24s forwards;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: -0.005em;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    border: 1px solid transparent;
+  }
+  .btn:active { transform: translateY(1px) scale(0.99); }
+  .btn-primary {
+    background: linear-gradient(180deg, #3FDD6E, var(--green));
+    color: #0B2412;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 10px 28px -10px rgba(52,199,89,0.65);
+  }
+  .btn-primary:hover { box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 14px 32px -8px rgba(52,199,89,0.8); transform: translateY(-1px); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.06);
+    border-color: var(--panel-border);
+    color: var(--text-primary);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.11); border-color: var(--panel-border-hover); transform: translateY(-1px); }
+
+  /* ---------- Demo ---------- */
+  .demo-section { padding: 8px 0 90px; }
+  .demo-frame {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow:
+      0 40px 90px -30px rgba(0,0,0,0.65),
+      0 2px 0 rgba(255,255,255,0.06) inset;
+    background: #0E1220;
+    opacity: 0;
+    animation: rise 0.9s cubic-bezier(.2,.8,.2,1) 0.3s forwards;
+  }
+  .demo-frame video {
+    width: 100%;
+    display: block;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .demo-glow {
+    position: absolute;
+    inset: -40px;
+    z-index: -1;
+    background: radial-gradient(50% 50% at 50% 30%, rgba(255,204,0,0.14), transparent 70%);
+    filter: blur(40px);
+  }
+
+  /* ---------- Section heading ---------- */
+  .section-head { text-align: center; margin-bottom: 48px; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+  }
+  h2.section-title {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3.4vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+  }
+  p.section-sub {
+    color: var(--text-secondary);
+    font-size: 16px;
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ---------- States ---------- */
+  .states-section { padding: 40px 0 100px; }
+  .states-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .state-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    padding: 30px 26px 28px;
+    text-align: left;
+    transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .state-card:hover { border-color: var(--panel-border-hover); transform: translateY(-3px); background: rgba(255,255,255,0.065); }
+  .state-card .glow-bg {
+    position: absolute; top: -60px; right: -60px; width: 160px; height: 160px;
+    border-radius: 50%; filter: blur(50px); opacity: 0.35; pointer-events: none;
+  }
+  .dot-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .dot {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-idle { background: var(--green); box-shadow: 0 0 16px 2px rgba(52,199,89,0.55); }
+  .dot-working { background: var(--yellow); box-shadow: 0 0 16px 2px rgba(255,204,0,0.55); }
+  .dot-waiting { background: var(--red); box-shadow: 0 0 16px 2px rgba(255,69,58,0.6); animation: blink 1.2s steps(1,end) infinite; }
+  .elapsed {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--red);
+    font-weight: 600;
+    background: rgba(255,69,58,0.12);
+    border: 1px solid rgba(255,69,58,0.28);
+    padding: 2px 9px;
+    border-radius: 7px;
+    margin-left: auto;
+  }
+  .state-card h3 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    letter-spacing: -0.005em;
+  }
+  .state-card p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .state-card.waiting { border-color: rgba(255,69,58,0.3); background: rgba(255,69,58,0.05); }
+  .state-card.waiting:hover { border-color: rgba(255,69,58,0.5); }
+
+  /* ---------- Features ---------- */
+  .features-section { padding: 40px 0 100px; }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+  .feature-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    padding: 26px 22px;
+    transition: border-color 0.25s ease, transform 0.25s ease;
+  }
+  .feature-card:hover { border-color: var(--panel-border-hover); transform: translateY(-3px); }
+  .feature-icon {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+    margin-bottom: 16px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid var(--panel-border);
+  }
+  .feature-card h3 {
+    font-size: 15.5px;
+    font-weight: 650;
+    margin: 0 0 8px;
+    letter-spacing: -0.005em;
+  }
+  .feature-card p {
+    font-size: 13.8px;
+    line-height: 1.62;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* ---------- Agents ---------- */
+  .agents-section { padding: 40px 0 100px; }
+  .agents-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .agent-chip {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    padding: 11px 20px 11px 16px;
+    font-size: 14.5px;
+    font-weight: 600;
+    transition: border-color 0.25s ease, transform 0.25s ease;
+  }
+  .agent-chip:hover { border-color: var(--panel-border-hover); transform: translateY(-2px); }
+  .agent-chip .swatch { width: 9px; height: 9px; border-radius: 50%; }
+  .agents-note {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-tertiary);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  .agents-note code {
+    font-family: var(--font-mono);
+    background: rgba(255,255,255,0.08);
+    padding: 2px 7px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 12.8px;
+  }
+
+  /* ---------- Install ---------- */
+  .install-section { padding: 40px 0 110px; }
+  .install-card {
+    background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    padding: 48px 44px;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .install-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-bottom: 30px;
+  }
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(52,199,89,0.14);
+    border: 1px solid rgba(52,199,89,0.35);
+    color: var(--green);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+  }
+  .step h4 { margin: 3px 0 6px; font-size: 15px; font-weight: 650; }
+  .step p { margin: 0; font-size: 13.8px; color: var(--text-secondary); line-height: 1.55; }
+  .install-cta { display: flex; justify-content: center; margin-bottom: 22px; }
+  .source-note {
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--text-tertiary);
+    line-height: 1.7;
+    border-top: 1px solid var(--panel-border);
+    padding-top: 20px;
+  }
+  .source-note code {
+    font-family: var(--font-mono);
+    background: rgba(255,255,255,0.08);
+    padding: 2px 7px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 12.8px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 34px 0 44px;
+  }
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13.5px;
+    color: var(--text-tertiary);
+  }
+  .footer-links { display: flex; gap: 22px; }
+  .footer-links a { color: var(--text-secondary); text-decoration: none; }
+  .footer-links a:hover { color: var(--text-primary); }
+
+  @keyframes blink {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0.22; }
+    100% { opacity: 1; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  [data-i18n-en], [data-i18n-ja] { }
+  html[lang="ja"] .lang-en { display: none; }
+  html[lang="en"] .lang-ja { display: none; }
+
+  @media (max-width: 860px) {
+    .states-grid { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr 1fr; }
+    .install-steps { grid-template-columns: 1fr; }
+    .hero { padding: 88px 0 48px; }
+  }
+  @media (max-width: 560px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .wrap { padding: 0 18px; }
+    .install-card { padding: 34px 24px; }
+    .cta-row { flex-direction: column; align-items: stretch; }
+    .btn { justify-content: center; }
+    .footer-inner { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner wrap" style="padding-left:0; padding-right:0;">
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span>Andon</span>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" id="btn-ja" onclick="setLang('ja')">JA</button>
+      <button type="button" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- HERO -->
+  <section class="hero wrap">
+    <div class="hero-mark">
+      <span class="emoji">🚦</span>
+      <span class="word">Andon</span>
+    </div>
+    <h1 class="headline">
+      <span class="lang-ja">あなたのエージェント、<br>いま<span class="accent-red">承認待ち</span>かも。</span>
+      <span class="lang-en">Your agent is waiting<br>for <span class="accent-red">you</span>.</span>
+    </h1>
+    <p class="subcopy">
+      <span class="lang-ja">Claude Code・Codex・Antigravity・Gemini CLI —— 裏で走らせているAIエージェントの状態を、メニューバーの信号機色で常時表示。音もポップアップも出さないから、会議中でも安心して併走できます。</span>
+      <span class="lang-en">Claude Code, Codex, Antigravity, Gemini CLI — see every background agent's state as a traffic light in your macOS menu bar. No sounds, no popups, meeting-safe by design.</span>
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/khr8959/andon/releases" target="_blank" rel="noopener">
+        <span aria-hidden="true">⬇</span>
+        <span class="lang-ja">dmgをダウンロード</span>
+        <span class="lang-en">Download dmg</span>
+      </a>
+      <a class="btn btn-secondary" href="https://github.com/khr8959/andon" target="_blank" rel="noopener">
+        <span aria-hidden="true">★</span>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section class="demo-section wrap">
+    <div class="demo-frame">
+      <div class="demo-glow" aria-hidden="true"></div>
+      <video autoplay muted loop playsinline preload="metadata" poster="og.png">
+        <source src="andon-demo.mp4" type="video/mp4">
+      </video>
+    </div>
+  </section>
+
+  <!-- STATES -->
+  <section class="states-section wrap" id="states">
+    <div class="section-head">
+      <span class="eyebrow">
+        <span class="lang-ja">ステータス表示</span>
+        <span class="lang-en">Status display</span>
+      </span>
+      <h2 class="section-title">
+        <span class="lang-ja">3色ですべてがわかる</span>
+        <span class="lang-en">Three colors tell you everything</span>
+      </h2>
+      <p class="section-sub">
+        <span class="lang-ja">複数セッションが同時に動いていても大丈夫。最も緊急度の高い状態がメニューバーに表示されます。</span>
+        <span class="lang-en">Running multiple sessions? No problem — the most urgent state always wins in the menu bar.</span>
+      </p>
+    </div>
+    <div class="states-grid">
+      <div class="state-card">
+        <div class="glow-bg" style="background:var(--green);"></div>
+        <div class="dot-row">
+          <span class="dot dot-idle" aria-hidden="true"></span>
+        </div>
+        <h3><span class="lang-ja">待機中</span><span class="lang-en">Idle</span></h3>
+        <p>
+          <span class="lang-ja">タスクが完了し、次の指示を待っている状態。安心して目を離せます。</span>
+          <span class="lang-en">The task is done and the agent is waiting for your next instruction. Safe to look away.</span>
+        </p>
+      </div>
+      <div class="state-card">
+        <div class="glow-bg" style="background:var(--yellow);"></div>
+        <div class="dot-row">
+          <span class="dot dot-working" aria-hidden="true"></span>
+        </div>
+        <h3><span class="lang-ja">作業中</span><span class="lang-en">Working</span></h3>
+        <p>
+          <span class="lang-ja">エージェントがコードを読み書き・実行している最中。まだ手を出さなくて大丈夫。</span>
+          <span class="lang-en">The agent is actively reading, writing, or running code. Nothing to do yet.</span>
+        </p>
+      </div>
+      <div class="state-card waiting">
+        <div class="glow-bg" style="background:var(--red);"></div>
+        <div class="dot-row">
+          <span class="dot dot-waiting" aria-hidden="true"></span>
+          <span class="elapsed" id="elapsed-timer">0:07</span>
+        </div>
+        <h3><span class="lang-ja">承認待ち</span><span class="lang-en">Needs approval</span></h3>
+        <p>
+          <span class="lang-ja">あなたの操作が必要な状態。点滅しながら経過時間を表示し、放置を防ぎます。</span>
+          <span class="lang-en">Your action is required. It blinks and counts elapsed time so it never gets forgotten.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section wrap">
+    <div class="section-head">
+      <span class="eyebrow">
+        <span class="lang-ja">特徴</span>
+        <span class="lang-en">Features</span>
+      </span>
+      <h2 class="section-title">
+        <span class="lang-ja">静かに、確実に知らせる</span>
+        <span class="lang-en">Quiet, but never missed</span>
+      </h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔇</div>
+        <h3><span class="lang-ja">音なし・ポップアップなし</span><span class="lang-en">No sound, no popups</span></h3>
+        <p>
+          <span class="lang-ja">通知音もダイアログも出しません。Web会議中でも他人に気づかれずに状態を確認できます。</span>
+          <span class="lang-en">No alert sounds, no dialogs. Check status discreetly, even mid-video-call.</span>
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚥</div>
+        <h3><span class="lang-ja">最も緊急な状態が勝つ</span><span class="lang-en">Most urgent state wins</span></h3>
+        <p>
+          <span class="lang-ja">複数のエージェントを並走させても、メニューバーは常に一番対応が必要な色を表示します。</span>
+          <span class="lang-en">Run several agents at once — the menu bar always shows the color that needs you most.</span>
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3><span class="lang-ja">ntfyでスマホにも通知</span><span class="lang-en">Push to your phone via ntfy</span></h3>
+        <p>
+          <span class="lang-ja">離席中の承認待ちは、ntfy連携でスマホへプッシュ通知。任意設定・デフォルトはOFF。</span>
+          <span class="lang-en">Optional ntfy integration pushes "needs approval" alerts to your phone while you're away. Off by default.</span>
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏭</div>
+        <h3><span class="lang-ja">由来はトヨタ生産方式</span><span class="lang-en">Named after the Toyota andon</span></h3>
+        <p>
+          <span class="lang-ja">生産ラインが止まったときに点灯する「アンドン(行灯)」から着想。異常を人に伝える現場の知恵をそのまま。</span>
+          <span class="lang-en">Named after the andon lamp that lights up when a production line needs human attention — same idea, for your terminal.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENTS -->
+  <section class="agents-section wrap">
+    <div class="section-head">
+      <span class="eyebrow">
+        <span class="lang-ja">対応エージェント</span>
+        <span class="lang-en">Supported agents</span>
+      </span>
+      <h2 class="section-title">
+        <span class="lang-ja">主要CLIエージェントに対応</span>
+        <span class="lang-en">Works with the CLIs you already use</span>
+      </h2>
+    </div>
+    <div class="agents-row">
+      <div class="agent-chip"><span class="swatch" style="background:var(--yellow);"></span>Claude Code</div>
+      <div class="agent-chip"><span class="swatch" style="background:var(--red);"></span>Codex CLI</div>
+      <div class="agent-chip"><span class="swatch" style="background:var(--green);"></span>Antigravity CLI</div>
+      <div class="agent-chip"><span class="swatch" style="background:#5A8CFF;"></span>Gemini CLI</div>
+    </div>
+    <p class="agents-note">
+      <span class="lang-ja">上記以外のエージェントも、<code>~/Library/Application Support/Andon/status/</code> にJSONファイルを1つ書くだけで表示対象になります(汎用プロトコル)。</span>
+      <span class="lang-en">Any other agent can show up too — just write one JSON file to <code>~/Library/Application Support/Andon/status/</code> (a generic, open protocol).</span>
+    </p>
+  </section>
+
+  <!-- INSTALL -->
+  <section class="install-section wrap" id="install">
+    <div class="section-head">
+      <span class="eyebrow">
+        <span class="lang-ja">インストール</span>
+        <span class="lang-en">Install</span>
+      </span>
+      <h2 class="section-title">
+        <span class="lang-ja">2ステップで導入完了</span>
+        <span class="lang-en">Up and running in two steps</span>
+      </h2>
+    </div>
+    <div class="install-card">
+      <div class="install-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <h4><span class="lang-ja">dmgをダウンロード</span><span class="lang-en">Download the dmg</span></h4>
+            <p>
+              <span class="lang-ja">GitHub Releasesから最新の <code style="font-family:var(--font-mono);background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:5px;">Andon-&lt;version&gt;.dmg</code> を取得します。</span>
+              <span class="lang-en">Grab the latest <code style="font-family:var(--font-mono);background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:5px;">Andon-&lt;version&gt;.dmg</code> from GitHub Releases.</span>
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <h4><span class="lang-ja">Applicationsへドラッグ</span><span class="lang-en">Drag into Applications</span></h4>
+            <p>
+              <span class="lang-ja">Andon.appをApplicationsフォルダにドラッグするだけ。ビルドは不要です。</span>
+              <span class="lang-en">Drag Andon.app into your Applications folder. No build step required.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="install-cta">
+        <a class="btn btn-primary" href="https://github.com/khr8959/andon/releases" target="_blank" rel="noopener">
+          <span aria-hidden="true">⬇</span>
+          <span class="lang-ja">dmgをダウンロード</span>
+          <span class="lang-en">Download dmg</span>
+        </a>
+      </div>
+      <div class="source-note">
+        <span class="lang-ja">ソースから使う場合は、リポジトリを取得して <code>./setup.sh</code> を実行するだけでビルド・インストール・エージェント設定生成までを一括で行います。</span>
+        <span class="lang-en">Building from source? Clone the repo and run <code>./setup.sh</code> — it builds, installs, and generates agent configs in one step.</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div>
+      <span class="lang-ja">MIT License · © 2026 Andon</span>
+      <span class="lang-en">MIT License · © 2026 Andon</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/khr8959/andon" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/khr8959/andon/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="https://github.com/khr8959/andon/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function setLang(lang) {
+    document.documentElement.setAttribute('lang', lang);
+    document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    try { localStorage.setItem('andon-lang', lang); } catch (e) {}
+  }
+
+  (function initLang() {
+    var saved = null;
+    try { saved = localStorage.getItem('andon-lang'); } catch (e) {}
+    var lang = saved || ((navigator.language || '').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en');
+    setLang(lang);
+  })();
+
+  // Cosmetic elapsed-time ticker on the "needs approval" demo card
+  (function tickElapsed() {
+    var el = document.getElementById('elapsed-timer');
+    if (!el) return;
+    var seconds = 7;
+    setInterval(function () {
+      seconds += 1;
+      var m = Math.floor(seconds / 60);
+      var s = seconds % 60;
+      el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    }, 1000);
+  })();
+</script>
+
+</body>
+</html>
