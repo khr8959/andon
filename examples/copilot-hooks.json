@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot SessionStart",
+        "timeoutSec": 5
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot UserPromptSubmit",
+        "timeoutSec": 5
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot PreToolUse",
+        "timeoutSec": 5
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot PostToolUse",
+        "timeoutSec": 5
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot PostToolUse",
+        "timeoutSec": 5
+      }
+    ],
+    "permissionRequest": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot PermissionRequest",
+        "timeoutSec": 5
+      }
+    ],
+    "notification": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot Notification",
+        "timeoutSec": 5
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot Stop",
+        "timeoutSec": 5
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py copilot SessionEnd",
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

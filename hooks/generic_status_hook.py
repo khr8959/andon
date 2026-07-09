@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
-"""Codex / Antigravity CLI など汎用のフックアダプタ。
+"""Codex / Antigravity / Cursor / GitHub Copilot CLI など汎用のフックアダプタ。
 
 使い方:
     python3 generic_status_hook.py <エージェント名> [イベント名]
 
-イベント名は標準入力JSONの hook_event_name から取得する。
-Antigravity のようにペイロードへイベント名を含めないエージェントでは
-第2引数で指定する(指定時は stdin より優先し、応答JSON `{}` を出力する)。
+イベント名は標準入力JSONの hook_event_name (Cursor は conversation_id 等の
+camelCase フィールドとともに hook_event_name も渡す)から取得する。
+Antigravity や Copilot CLI のようにペイロードへイベント名を含めない
+(または表記が不確実な)エージェントでは第2引数で指定する。
 
 対応イベントと状態の対応:
     UserPromptSubmit / PreToolUse / PostToolUse / PreInvocation
         / SubagentStart / SubagentStop / PreCompact / PostCompact
-        / BeforeAgent / BeforeTool / AfterTool / PreCompress      -> running
-    PermissionRequest / Notification                              -> waiting
-    Stop / SessionStart / PostInvocation / AfterAgent             -> idle
-    SessionEnd                                                    -> 状態ファイル削除
+        / BeforeAgent / BeforeTool / AfterTool / PreCompress
+        / beforeSubmitPrompt / preToolUse / postToolUse
+        / postToolUseFailure / afterShellExecution / afterMCPExecution
+        / afterFileEdit                                            -> running
+    PermissionRequest / Notification
+        / beforeShellExecution / beforeMCPExecution                -> waiting
+    Stop / SessionStart / PostInvocation / AfterAgent
+        / stop / sessionStart                                      -> idle
+    SessionEnd / sessionEnd                                        -> 状態ファイル削除
 
-Gemini CLI(BeforeAgent 等)は Claude Code と同じ stdin 形式
-(hook_event_name / session_id / cwd)なのでイベント名の引数は不要。
+stdout応答: Antigravity と Cursor は stdout に応答JSON(`{}` = 既定動作)を
+期待するため、agent が antigravity または cursor のときだけ `{}` を出力する。
+Copilot CLI は「何も出力しない = 通常フローに委ねる」仕様のため出力しない。
 """
 
 import hashlib
@@ -42,10 +49,29 @@ RUNNING_EVENTS = {
     "BeforeTool",
     "AfterTool",
     "PreCompress",
+    "beforeSubmitPrompt",
+    "preToolUse",
+    "postToolUse",
+    "postToolUseFailure",
+    "afterShellExecution",
+    "afterMCPExecution",
+    "afterFileEdit",
 }
-WAITING_EVENTS = {"PermissionRequest", "Notification"}
-IDLE_EVENTS = {"Stop", "SessionStart", "PostInvocation", "AfterAgent"}
-REMOVE_EVENTS = {"SessionEnd"}
+WAITING_EVENTS = {
+    "PermissionRequest",
+    "Notification",
+    "beforeShellExecution",
+    "beforeMCPExecution",
+}
+IDLE_EVENTS = {
+    "Stop",
+    "SessionStart",
+    "PostInvocation",
+    "AfterAgent",
+    "stop",
+    "sessionStart",
+}
+REMOVE_EVENTS = {"SessionEnd", "sessionEnd"}
 
 
 def sanitize(value):
@@ -60,16 +86,29 @@ def main():
     except Exception:
         data = {}
 
-    if argv_event or agent == "gemini":
-        # Antigravity / Gemini CLI は stdout に応答JSON({}=何もしない)を期待する
+    if agent in ("antigravity", "cursor"):
+        # Antigravity / Cursor は stdout に応答JSON({}=既定動作)を期待する
         print("{}")
         sys.stdout.flush()
 
     event = argv_event or str(data.get("hook_event_name") or "")
     workspace_paths = data.get("workspacePaths") or []
-    cwd = str(data.get("cwd") or "") or (str(workspace_paths[0]) if workspace_paths else "")
+    workspace_roots = data.get("workspace_roots") or []
+    cwd = (
+        str(data.get("cwd") or "")
+        or (str(workspace_paths[0]) if workspace_paths else "")
+        or (str(workspace_roots[0]) if workspace_roots else "")
+    )
 
-    session_id = sanitize(str(data.get("session_id") or data.get("conversationId") or ""))
+    session_id = sanitize(
+        str(
+            data.get("session_id")
+            or data.get("conversationId")
+            or data.get("conversation_id")
+            or data.get("sessionId")
+            or ""
+        )
+    )
     if not session_id:
         # session_id が渡されないエージェント向けのフォールバック
         session_id = hashlib.sha1(f"{agent}:{cwd}".encode()).hexdigest()[:12]
@@ -86,7 +125,7 @@ def main():
 
     if event in WAITING_EVENTS:
         state = "waiting"
-        tool = data.get("tool_name") or ""
+        tool = data.get("tool_name") or data.get("toolName") or data.get("command") or ""
         message = str(data.get("message") or "") or (
             f"{tool} の実行承認を待っています" if tool else "承認・入力待ちです"
         )

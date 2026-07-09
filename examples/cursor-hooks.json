@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "preToolUse": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "postToolUse": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "beforeShellExecution": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "afterShellExecution": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "beforeMCPExecution": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "afterMCPExecution": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "afterFileEdit": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "stop": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "sessionStart": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ],
+    "sessionEnd": [
+      { "command": "/usr/bin/python3 /PATH/TO/andon/hooks/generic_status_hook.py cursor" }
+    ]
+  }
+}
