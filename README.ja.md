@@ -126,17 +126,32 @@ agy はフック(JSON hooks)にも対応しており、プラグイン(`cd build
 - ペイロードは camelCase(`conversationId` / `workspacePaths`)でイベント名を含まないため、アダプタにはイベント名を第2引数で渡す(`generic_status_hook.py antigravity Stop` など)
 - グローバルの `~/.gemini/antigravity-cli/hooks.json` 直置きは読まれない(プラグインかワークスペースの `.agents/hooks.json` を使う)
 
-## Gemini CLI との連携
+## Cursor との連携
 
-> **状態: アダプタの机上検証のみ。** Gemini CLI(0.46.0)はフック機構を持ち、stdin の JSON(`hook_event_name` / `session_id` / `cwd`)が Claude Code 互換のため `generic_status_hook.py gemini` がそのまま使える。ただし検証環境では Gemini Code Assist 個人向け無料枠の廃止(Antigravity への移行案内)により認証できず、実機での発火確認は未実施。
+> **状態: 実機検証済み(cursor-agent CLI 2026.07.08 で発火確認)。** Cursorのフックはstdin JSONでペイロードを渡し、`hook_event_name`(camelCase)・`conversation_id`・`workspace_roots`(配列)を含むため、引数でのイベント名指定は不要(実ペイロードと一致することを確認済み)。
 
-`build/config/gemini-settings-hooks.json`(`setup.sh` が生成)の `hooks` オブジェクトを `~/.gemini/settings.json` にマージする。
+`build/config/cursor-hooks.json`(`setup.sh` が生成)の `hooks` オブジェクトを `~/.cursor/hooks.json` にマージする。Cursor IDEとcursor-agent CLIの両方が `~/.cursor/hooks.json` を読む(CLIでの発火を実機確認済み)。
 
-- `BeforeAgent` / `AfterTool` → 実行中(🟡)
-- `Notification`(`ToolPermission` = ツール承認要求)→ 承認・入力待ち(🔴)
-- `AfterAgent` / `SessionStart` → 待機中(🟢)
-- `SessionEnd` → 表示から削除
-- 注意: Gemini のフックは stdout に応答JSON以外を出力すると壊れる仕様のため、アダプタは `gemini` 指定時に `{}` を出力する。timeout の単位はミリ秒
+- `beforeSubmitPrompt` / `preToolUse` / `postToolUse` / `afterFileEdit` → 実行中(🟡)
+- `beforeShellExecution` / `beforeMCPExecution` → 承認・入力待ち(🔴)
+- `afterShellExecution` / `afterMCPExecution` → 実行中(🟡)
+- `stop` / `sessionStart` → 待機中(🟢)
+- 注意: 実機で以下を確認済み: `sessionStart` → 待機中、`preToolUse` → 実行中、`beforeShellExecution` → 承認・入力待ち(メッセージに「\<コマンド\> の実行承認を待っています」が入る)、`afterShellExecution` → 実行中、`postToolUse` → 実行中、セッション終了で状態ファイル削除。`beforeSubmitPrompt` は非対話モード(`-p`)では発火を観測できなかった(対話モードは未検証)
+- 注意: Cursorには承認待ち専用のイベントがないため、`beforeShellExecution` / `beforeMCPExecution` の発火を承認・入力待ち(🔴)として代用している。自動実行(`--trust` / auto-run)時は各コマンド実行前に赤が点くが、`beforeShellExecution` → `afterShellExecution` が即座に連続するため赤は約0.3〜0.5秒の点灯で済み(実測)、その後 `afterShellExecution` 等で黄に戻る。アダプタは `cursor` 指定時に `{}`(permission指定なし=既定フロー)を出力する
+
+## GitHub Copilot CLI との連携
+
+> **状態: 実機検証済み(Copilot CLI 1.0.69 で全ライフサイクルの発火を確認)。** ペイロードに含まれるイベント名の表記が資料上不確実なため、アダプタにはペイロードではなく引数でイベント名(Claude Code互換の名称)を明示的に渡す。
+
+`build/config/copilot-hooks.json`(`setup.sh` が生成)を `~/.copilot/hooks/andon.json` にコピーする。Copilot CLI は `~/.copilot/hooks/*.json` からフックを読み込む。以下のイベントはすべて実機で発火を確認済み:
+
+- `userPromptSubmitted` / `preToolUse` / `postToolUse` / `postToolUseFailure` → 実行中(🟡)
+- `permissionRequest` / `notification` → 承認・入力待ち(🔴)
+- `sessionStart` / `agentStop` → 待機中(🟢)
+- `sessionEnd` → 表示から削除(状態ファイル削除)
+- 注意: `notification` の承認要求時はメッセージに "Run command: \<コマンド\>" が入る
+- 注意: `permissionRequest` はツールが自動許可される場合でも発火する。また承認後からツール実行完了までは、次のイベント(`postToolUse`)が来るまで赤表示が続く(実行開始を示すイベントがCopilot CLIに存在しないため)。長時間かかるコマンドでは承認後もしばらく赤に見えることがある
+- `--allow-all-tools` 実行時も、ツールごとに一瞬赤が点く
 
 ## 他のエージェントへの対応(汎用プロトコル)
 
@@ -171,7 +186,7 @@ Sources/Andon/                  メニューバーアプリ本体(Swift + SwiftU
 assets/icon.svg                 アプリアイコンのソース(headless Chrome で PNG 化、手順はファイル内コメント)
 assets/icon-1024.png            レンダリング済みアイコン(make-app.sh が .icns に変換して同梱)
 hooks/claude_code_hook.py       Claude Code hooks 用アダプタ(イベント名を引数で受ける)
-hooks/generic_status_hook.py    Codex / Antigravity CLI 等の汎用アダプタ(イベント名は stdin の hook_event_name か第2引数)
+hooks/generic_status_hook.py    Codex / Antigravity / Cursor / Copilot CLI 等の汎用アダプタ(イベント名は stdin の hook_event_name か第2引数)
 hooks/agy_status_poller.py      Antigravity CLI 用ポーラー(language server API を監視)
 antigravity-plugin/             Antigravity CLI 用プラグイン(フック方式)
 examples/                       各エージェント用の設定テンプレート(パスはプレースホルダ。

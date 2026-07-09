@@ -46,7 +46,8 @@ cat <<EOF
   Claude Code : merge claude-settings-hooks.json into ~/.claude/settings.json
   Codex CLI   : merge codex-hooks.json into ~/.codex/hooks.json, then run
                 /hooks inside interactive codex to trust the hook
-  Gemini CLI  : merge gemini-settings-hooks.json into ~/.gemini/settings.json
+  Cursor      : merge cursor-hooks.json into ~/.cursor/hooks.json
+  Copilot CLI : copy copilot-hooks.json to ~/.copilot/hooks/andon.json
   Antigravity : register the poller with launchd (recommended; detects the
                 red "waiting for approval" state):
                   cp "${OUT}/andon-agy-poller.plist" ~/Library/LaunchAgents/
